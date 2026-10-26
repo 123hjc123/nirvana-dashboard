@@ -299,6 +299,7 @@ function makeCtx() {
   data.emotion = emotion;
   data.sectors = sectorsOut;
   data.slt = slt;
+  data.meta = vm.runInContext(`(() => { const p = stPARENT, order = stSECTORS.map(x => x[0]); const lt = {}; ST_LT_GROUPS.forEach(([g, arr]) => lt[g] = arr.map(x => x[0].slice(2))); return { parents: p, sectorOrder: order, ltGroups: lt }; })()`, ctx);
   fs.writeFileSync('analysis_data.json', JSON.stringify(data));
   fs.writeFileSync(STATE_FILE, JSON.stringify(state));
   console.log('   写入成功:', (fs.statSync('analysis_data.json').size / 1024).toFixed(0) + 'KB · 状态文件', (fs.statSync(STATE_FILE).size / 1024).toFixed(0) + 'KB');
