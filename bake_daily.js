@@ -288,7 +288,17 @@ function makeCtx() {
   // ---------- 8/8 校验并写入 ----------
   console.log('8/8 校验并写入 analysis_data.json …');
   const data = vm.runInContext('analysisData', ctx);
-  data.stocks.forEach(s => { delete s._kl; delete s._ind; });
+  // 附带 K线包（Widget 端实时重算用）：近180根 收/高/低 + 末根开/日期 + 近10根量
+  const KL_BARS = 180, KL_VOLS = 10;
+  data.stocks.forEach(s => {
+    if (s._kl && s._kl.length >= 30) {
+      const kl = s._kl.slice(-KL_BARS);
+      s.k = { d: kl[kl.length - 1].date, o: kl[kl.length - 1].open,
+        c: kl.map(x => x.close), h: kl.map(x => x.high), l: kl.map(x => x.low),
+        v: kl.slice(-KL_VOLS).map(x => x.vol) };
+    }
+    delete s._kl; delete s._ind;
+  });
   const scored = data.stocks.filter(s => s.score != null).length;
   console.log(`   个股 ${data.stocks.length} 只有评分 ${scored} · 指数 ${data.indices.length} · ETF ${data.etfs.length}`);
   if (scored < MIN_STOCKS) { console.error(`评分成功数 ${scored} < ${MIN_STOCKS}，数据源异常，放弃写入（保留旧文件）`); process.exit(1); }
