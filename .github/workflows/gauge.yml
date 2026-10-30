@@ -1,0 +1,26 @@
+name: gauge-monthly
+on:
+  schedule:
+    # 每月18日 11:41 北京时间（03:41 UTC）：央行上月金融数据已发布、交易所月度数据已齐
+    - cron: '41 3 18 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests pandas xlrd openpyxl
+      - run: python scripts/fetch_gauge.py
+      - name: commit & push
+        run: |
+          git config user.name "gauge-bot"
+          git config user.email "gauge-bot@users.noreply.github.com"
+          git add gauge_data.json
+          git diff --cached --quiet && echo "no change" || (git commit -m "gauge: monthly water-gauge update $(date -u +%Y-%m-%d)" && git push)
